@@ -1,0 +1,84 @@
+package sandbox
+
+import "core:container/queue"
+import "core:fmt"
+
+COMMAND_LIST_SIZE :: 256 * 1024
+
+Stack :: struct($T: typeid, $N: int) {
+	idx:   i32,
+	items: [N]T,
+}
+
+push :: #force_inline proc(stk: ^$T/Stack($V, $N), val: V) {
+	assert(stk.idx < len(stk.items))
+	stk.items[stk.idx] = val
+	stk.idx += 1
+}
+pop :: #force_inline proc(stk: ^$T/Stack($V, $N)) {
+	assert(stk.idx > 0)
+	stk.idx -= 1
+}
+
+Command_Print :: struct {
+	using command: Command,
+	text:          string,
+}
+
+Command_Variant :: union {
+	^Command_Print,
+}
+Command :: struct {
+	variant: Command_Variant,
+	size:    i32,
+}
+
+push_command :: proc($Type: typeid) -> ^Type {
+	size := i32(size_of(Type))
+	cmd := transmute(^Type)&command_list.items[command_list.idx]
+	assert(command_list.idx + size < COMMAND_LIST_SIZE)
+	command_list.idx += size
+	cmd.variant = cmd
+	cmd.size = size
+	return cmd
+}
+
+next_command :: proc(pcmd: ^^Command) {
+	cmd := pcmd^
+	defer pcmd^ = cmd
+	if cmd != nil {
+		cmd = (^Command)(uintptr(cmd) + uintptr(cmd.size))
+	} else {
+		cmd = (^Command)(&command_list.items[0])
+	}
+}
+
+next_command_iterator :: proc(pcm: ^^Command) -> Command_Variant {
+	next_command(pcm)
+	return pcm^.variant
+}
+
+command_list: Stack(u8, COMMAND_LIST_SIZE)
+
+main :: proc() {
+	for {
+		command_list.idx = 0
+
+		push_command(Command_Print).text = "1"
+		push_command(Command_Print).text = "2"
+		push_command(Command_Print).text = "3"
+		push_command(Command_Print).text = "4"
+		push_command(Command_Print).text = "5"
+
+		command: ^Command
+		for i in 0 ..< command_list.idx / size_of(Command) {
+			variant := next_command_iterator(&command)
+			switch cmd in variant {
+			case ^Command_Print:
+				fmt.println(cmd)
+			}
+		}
+
+		// fmt.println(command_list.idx)
+	}
+}
