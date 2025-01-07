@@ -72,7 +72,7 @@ frame :: proc "c" () {
 
 	// projection_matrix := m.ortho_mat4(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)
 	vs_params := Vs_Params {
-		position = {state.rx + 100.0, 100.0},
+		position = {100.0, 100.0},
 		size     = {100.0, 100.0},
 		// projection = projection_matrix,
 	}

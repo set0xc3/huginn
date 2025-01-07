@@ -80,6 +80,10 @@ persp_mat4 :: proc(fov, aspect, near, far: f32) -> mat4 {
 	return m
 }
 
+// HMM_Orthographic_RH_NO:
+// Produces a right-handed orthographic projection matrix with Z ranging from -1 to 1 (the GL convention).
+// Left, Right, Bottom, and Top specify the coordinates of their respective clipping planes.
+// Near and Far specify the distances to the near and far clipping planes.
 ortho :: proc {
 	ortho_mat4,
 }

@@ -77,8 +77,14 @@ void main() {
   float borderAlpha = 1.0 - smoothstep(-borderEdgeWidth, borderEdgeWidth, borderDist);
   vec4 borderColor = vec4(u_colorBorder.rgb, borderAlpha * rectAlpha);
 
+  float dist_circle = sdf_circle(p, 150.0);
+  float circle_edge_width = fwidth(dist_circle) * 0.5;
+  float circle_alpha = 1.0 - smoothstep(-circle_edge_width, circle_edge_width, dist_circle);
+  vec4 circle_color = vec4(vec3(1.0, 0.0, 1.0), circle_alpha);
+
   // --- Blending Layers ---
   vec4 result = u_colorBg;
+  // result = mix(result, circle_color, circle_alpha);
   result = mix(result, rectColor, rectAlpha);
   result = mix(result, borderColor, borderAlpha);
 
