@@ -179,3 +179,15 @@ mul_mat4 :: proc(left, right: mat4) -> mat4 {
 	}
 	return m
 }
+
+scale :: proc {
+	scale_mat4,
+}
+scale_mat4 :: proc(scale: vec3) -> mat4 {
+	m := identity()
+	m[0][0] = scale.x
+	m[1][1] = scale.y
+	m[2][2] = scale.z
+	m[3][3] = 1.0
+	return m
+}

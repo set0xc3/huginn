@@ -29,10 +29,10 @@ init :: proc "c" () {
 
 	// a vertex buffer
 	vertices := [?]Vertex {
-		{-1.0, 1.0, 240.0 / 255, 241.0 / 255, 242.0 / 255, 1.0},
-		{1.0, 1.0, 240.0 / 255, 241.0 / 255, 242.0 / 255, 1.0},
-		{1.0, -1.0, 240.0 / 255, 241.0 / 255, 242.0 / 255, 1.0},
-		{-1.0, -1.0, 240.0 / 255, 241.0 / 255, 242.0 / 255, 1.0},
+		{-1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
+		{1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
+		{1.0, -1.0, 1.0, 1.0, 1.0, 1.0},
+		{-1.0, -1.0, 1.0, 1.0, 1.0, 1.0},
 	}
 	state.default.bind.vertex_buffers[0] = sg.make_buffer(
 		{data = {ptr = &vertices, size = size_of(vertices)}},
@@ -44,23 +44,36 @@ init :: proc "c" () {
 		{type = .INDEXBUFFER, data = {ptr = &indices, size = size_of(indices)}},
 	)
 
-	// a shader and pipeline object
-	state.default.pip = sg.make_pipeline(
-		{
-			shader = sg.make_shader(quad_shader_desc(sg.query_backend())),
-			index_type = .UINT16,
-			layout = {
-				attrs = {
-					ATTR_quad_position0 = {format = .FLOAT2},
-					ATTR_quad_color0 = {format = .FLOAT4},
-				},
+	pip_desc := sg.Pipeline_Desc {
+		shader = sg.make_shader(quad_shader_desc(sg.query_backend())),
+		index_type = .UINT16,
+		layout = {
+			attrs = {
+				ATTR_quad_position0 = {format = .FLOAT2},
+				ATTR_quad_color0 = {format = .FLOAT4},
 			},
 		},
-	)
+	}
+	pip_desc.colors[0].blend = {
+		enabled          = true,
+		src_factor_rgb   = .SRC_ALPHA,
+		dst_factor_rgb   = .ONE_MINUS_SRC_ALPHA,
+		op_rgb           = .ADD,
+		src_factor_alpha = .SRC_ALPHA,
+		dst_factor_alpha = .ONE_MINUS_SRC_ALPHA,
+		op_alpha         = .ADD,
+	}
+
+	// a shader and pipeline object
+	state.default.pip = sg.make_pipeline(pip_desc)
 
 	// default pass action
 	state.default.pass_action = {
-		colors = {0 = {load_action = .CLEAR, clear_value = {1, 0, 1, 1}}},
+		colors = {
+			0 = {load_action = .CLEAR, store_action = .STORE, clear_value = {0.0, 0.0, 0.0, 0.0}},
+		},
+		depth = {load_action = .DONTCARE, store_action = .DONTCARE, clear_value = 0.0},
+		stencil = {load_action = .DONTCARE, store_action = .DONTCARE, clear_value = 0},
 	}
 }
 
@@ -70,11 +83,11 @@ frame :: proc "c" () {
 	t := f32(sapp.frame_duration() * 60.0)
 	state.rx += 1.0 * t
 
-	// projection_matrix := m.ortho_mat4(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)
+	ortho_matrix := m.ortho(-1.0, sapp.widthf(), -1.0, sapp.heightf(), -1.0, 1.0)
+	scale_matrix := m.scale({100.0, 100.0, 0.0})
+	projection_matrix := m.mul(ortho_matrix, scale_matrix)
 	vs_params := Vs_Params {
-		position = {100.0, 100.0},
-		size     = {100.0, 100.0},
-		// projection = projection_matrix,
+		projection = projection_matrix,
 	}
 
 	sg.begin_pass({action = state.default.pass_action, swapchain = sglue.swapchain()})
