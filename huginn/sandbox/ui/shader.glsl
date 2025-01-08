@@ -2,23 +2,23 @@
 @header import sg "huginn:vendor/sokol/gfx"
 @header import m "huginn:core/math"
 @ctype mat4 m.mat4
+@ctype vec4 m.vec4
 
 @vs vs
 layout(binding=0) uniform vs_params {
-  mat4 projection;
+  mat4 u_projection;
+  vec4 u_color;
 };
 
-in vec4 position0;
-in vec4 color0;
+in vec4 position;
 
 out vec4 color;
 out vec2 frag_coord;
 
 void main() {
-  gl_Position = projection * position0;
-  color = color0;
-
-  frag_coord = position0.xy;
+  gl_Position = u_projection * position;
+  color = u_color;
+  frag_coord = position.xy;
 }
 @end
 

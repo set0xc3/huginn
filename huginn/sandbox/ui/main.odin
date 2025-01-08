@@ -1,6 +1,7 @@
 package main
 
 import "base:runtime"
+import "core:encoding/uuid"
 import "core:fmt"
 
 import m "huginn:core/math"
@@ -19,7 +20,7 @@ state: struct {
 }
 
 Vertex :: struct {
-	x, y, r, g, b, a: f32,
+	x, y, r: f32,
 }
 
 init :: proc "c" () {
@@ -28,12 +29,7 @@ init :: proc "c" () {
 	sg.setup({environment = sglue.environment(), logger = {func = slog.func}})
 
 	// a vertex buffer
-	vertices := [?]Vertex {
-		{-1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
-		{1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
-		{1.0, -1.0, 1.0, 1.0, 1.0, 1.0},
-		{-1.0, -1.0, 1.0, 1.0, 1.0, 1.0},
-	}
+	vertices := [?]Vertex{{-1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, {1.0, -1.0, 1.0}, {-1.0, -1.0, 1.0}}
 	state.default.bind.vertex_buffers[0] = sg.make_buffer(
 		{data = {ptr = &vertices, size = size_of(vertices)}},
 	)
@@ -47,12 +43,7 @@ init :: proc "c" () {
 	pip_desc := sg.Pipeline_Desc {
 		shader = sg.make_shader(quad_shader_desc(sg.query_backend())),
 		index_type = .UINT16,
-		layout = {
-			attrs = {
-				ATTR_quad_position0 = {format = .FLOAT2},
-				ATTR_quad_color0 = {format = .FLOAT4},
-			},
-		},
+		layout = {attrs = {ATTR_quad_position = {format = .FLOAT2}}},
 	}
 	pip_desc.colors[0].blend = {
 		enabled          = true,
@@ -77,24 +68,30 @@ init :: proc "c" () {
 	}
 }
 
+draw_quad :: proc(position, size: m.vec2, color: m.vec4) {
+	ortho_matrix := m.ortho(-1.0, sapp.widthf(), -1.0, sapp.heightf(), -1.0, 1.0)
+	scale_matrix := m.scale({size.x, size.y, 0.0})
+	translate_matrix := m.translate({position.x, position.y, 0.0})
+	projection_matrix := m.mul(m.mul(ortho_matrix, translate_matrix), scale_matrix)
+	vs_params := Vs_Params {
+		u_projection = projection_matrix,
+		u_color      = color,
+	}
+	sg.apply_uniforms(UB_vs_params, {ptr = &vs_params, size = size_of(vs_params)})
+	sg.draw(0, 6, 1)
+}
+
 frame :: proc "c" () {
 	context = runtime.default_context()
 
 	t := f32(sapp.frame_duration() * 60.0)
 	state.rx += 1.0 * t
 
-	ortho_matrix := m.ortho(-1.0, sapp.widthf(), -1.0, sapp.heightf(), -1.0, 1.0)
-	scale_matrix := m.scale({100.0, 100.0, 0.0})
-	projection_matrix := m.mul(ortho_matrix, scale_matrix)
-	vs_params := Vs_Params {
-		projection = projection_matrix,
-	}
-
 	sg.begin_pass({action = state.default.pass_action, swapchain = sglue.swapchain()})
 	sg.apply_pipeline(state.default.pip)
 	sg.apply_bindings(state.default.bind)
-	sg.apply_uniforms(UB_vs_params, {ptr = &vs_params, size = size_of(vs_params)})
-	sg.draw(0, 6, 1)
+	draw_quad({0.0, 0.0}, {100.0, 100.0}, {1.0, 0.0, 1.0, 1.0})
+	draw_quad({state.rx, 0.0}, {100.0, 100.0}, {1.0, 1.0, 1.0, 1.0})
 	sg.end_pass()
 	sg.commit()
 }
