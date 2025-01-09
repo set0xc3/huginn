@@ -13,13 +13,8 @@
       pkgs = import nixpkgs {
         inherit system;
       };
-
-      libs = with pkgs; [
-      ];
     in {
       devShells.default = pkgs.mkShell {
-        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libs;
-
         packages = with pkgs; [
           xorg.libX11
           xorg.libXi
