@@ -13,38 +13,14 @@ import sg "huginn:vendor/sokol/gfx"
 import sglue "huginn:vendor/sokol/glue"
 import slog "huginn:vendor/sokol/log"
 
-Schedule_Type :: enum {
-	//
-	PreStartup,
-	Startup,
-	PostStartup,
-	//
-	PreUpdate,
-	Update,
-	PostUpdate,
-	//
-	FixedPreUpdate,
-	FixedUpdate,
-	FixedPostUpdate,
-}
-
 App :: struct {
 	is_quit: bool,
 	plugins: list.List,
 }
 
-@(private)
-state: struct {
-	default: struct {
-		pass_action: sg.Pass_Action,
-		pip:         sg.Pipeline,
-		bind:        sg.Bindings,
-	},
-	rx, ry:  f32,
-}
-
-new :: proc() -> App {
-	return {}
+init :: proc() -> (app: ^App) {
+	app = new(App)
+	return
 }
 
 add_plugins :: proc(self: ^App, plugins: []^Plugin) {
@@ -71,50 +47,4 @@ run :: proc(self: ^App) {
 	t1.user_index = 1
 	t1.data = self
 	thread.start(t1)
-
-	run2()
-}
-
-@(private)
-run2 :: proc() {
-	sapp.run(
-		{
-			init_cb = init,
-			frame_cb = frame,
-			cleanup_cb = cleanup,
-			event_cb = event,
-			width = 1280,
-			height = 720,
-			window_title = "huginn",
-			icon = {sokol_default = false},
-			logger = {func = slog.func},
-		},
-	)
-}
-
-@(private)
-init :: proc "c" () {
-	context = runtime.default_context()
-
-	sg.setup({environment = sglue.environment(), logger = {func = slog.func}})
-}
-
-@(private)
-frame :: proc "c" () {
-	context = runtime.default_context()
-}
-
-@(private)
-event :: proc "c" (event: ^sapp.Event) {
-	#partial switch event.type {
-	case .KEY_UP:
-		if event.key_code == .ESCAPE {
-			sapp.quit()
-		}
-	}
-}
-
-@(private)
-cleanup :: proc "c" () {
-	context = runtime.default_context()
 }
