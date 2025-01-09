@@ -3,9 +3,9 @@ package ui
 import "core:container/intrusive/list"
 import "core:encoding/uuid"
 import "core:fmt"
-import m "huginn:core/math"
 
-import "huginn:/core/plugin"
+import "huginn:/core/app"
+import m "huginn:core/math"
 
 vec2 :: distinct m.vec2
 vec4 :: distinct m.vec4
@@ -40,21 +40,9 @@ Style :: struct {}
 
 Context :: struct {}
 
-init :: proc() {}
-
-frame :: proc() {}
-
-plugin_deps: []^plugin.Interface = {&plugin.test_plugin}
-plugin: plugin.Interface = {
-	build = proc(self: ^plugin.Interface) {
-		for dep in plugin_deps {
-			list.push_back(&self.deps, &dep.node)
-			dep.build(dep)
-		}
-
-		init()
-	},
-	ready = proc() -> bool {
-		return true
-	},
+get_plugin :: proc() -> (plugin: ^app.Plugin) {
+	plugin = new(app.Plugin)
+	plugin.id = "UI_Plugin"
+	plugin.build = proc(self: ^app.Plugin, app_ctx: ^app.App) {}
+	return
 }

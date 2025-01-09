@@ -1,20 +1,17 @@
 package app
 
+import "base:runtime"
 import "core:container/intrusive/list"
 import "core:container/queue"
+import "core:fmt"
+import "core:sync"
+import "core:thread"
 
 import m "huginn:core/math"
 import sapp "huginn:vendor/sokol/app"
 import sg "huginn:vendor/sokol/gfx"
 import sglue "huginn:vendor/sokol/glue"
 import slog "huginn:vendor/sokol/log"
-
-import "base:runtime"
-import "core:fmt"
-
-import "huginn:core/app"
-import "huginn:core/plugin"
-import "huginn:core/ui"
 
 Schedule_Type :: enum {
 	//
@@ -31,10 +28,9 @@ Schedule_Type :: enum {
 	FixedPostUpdate,
 }
 
-Context :: struct {
+App :: struct {
 	is_quit: bool,
 	plugins: list.List,
-	systems: list.List,
 }
 
 @(private)
@@ -47,23 +43,40 @@ state: struct {
 	rx, ry:  f32,
 }
 
-new :: proc() -> Context {
+new :: proc() -> App {
 	return {}
 }
 
-add_plugins :: proc(self: ^Context, plugins: []^plugin.Interface) {
-	for p in plugins {
-		list.push_back(&self.plugins, &p.node)
-
-		p.state = .Adding
-		p.build(p)
+add_plugins :: proc(self: ^App, plugins: []^Plugin) {
+	for plugin in plugins {
+		list.push_back(&self.plugins, &plugin.node)
 	}
 }
 
-add_system :: proc(schedule: Schedule_Type, system: proc()) {
+@(private)
+update :: proc(t: ^thread.Thread) {
+	app_ctx := (cast(^App)t.data)
+
+	{
+		it := list.iterator_head(app_ctx.plugins, Plugin, "node")
+		for plugin in list.iterate_next(&it) {
+			plugin.build(plugin, app_ctx)
+		}
+	}
 }
 
-run :: proc(self: ^Context) {
+run :: proc(self: ^App) {
+	t1 := thread.create(update)
+	t1.init_context = context
+	t1.user_index = 1
+	t1.data = self
+	thread.start(t1)
+
+	run2()
+}
+
+@(private)
+run2 :: proc() {
 	sapp.run(
 		{
 			init_cb = init,
@@ -80,16 +93,6 @@ run :: proc(self: ^Context) {
 }
 
 @(private)
-event :: proc "c" (event: ^sapp.Event) {
-	#partial switch event.type {
-	case .KEY_UP:
-		if event.key_code == .ESCAPE {
-			sapp.quit()
-		}
-	}
-}
-
-@(private)
 init :: proc "c" () {
 	context = runtime.default_context()
 
@@ -99,6 +102,16 @@ init :: proc "c" () {
 @(private)
 frame :: proc "c" () {
 	context = runtime.default_context()
+}
+
+@(private)
+event :: proc "c" (event: ^sapp.Event) {
+	#partial switch event.type {
+	case .KEY_UP:
+		if event.key_code == .ESCAPE {
+			sapp.quit()
+		}
+	}
 }
 
 @(private)
