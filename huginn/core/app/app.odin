@@ -15,7 +15,6 @@ import slog "huginn:vendor/sokol/log"
 
 App :: struct {
 	is_quit: bool,
-	plugins: list.List,
 }
 
 init :: proc() -> (app: ^App) {
@@ -23,28 +22,9 @@ init :: proc() -> (app: ^App) {
 	return
 }
 
-add_plugins :: proc(self: ^App, plugins: []^Plugin) {
-	for plugin in plugins {
-		list.push_back(&self.plugins, &plugin.node)
-	}
-}
-
 @(private)
-update :: proc(t: ^thread.Thread) {
-	app_ctx := (cast(^App)t.data)
-
-	{
-		it := list.iterator_head(app_ctx.plugins, Plugin, "node")
-		for plugin in list.iterate_next(&it) {
-			plugin.build(plugin, app_ctx)
-		}
-	}
+update :: proc() {
 }
 
 run :: proc(self: ^App) {
-	t1 := thread.create(update)
-	t1.init_context = context
-	t1.user_index = 1
-	t1.data = self
-	thread.start(t1)
 }

@@ -4,8 +4,8 @@ import "core:container/intrusive/list"
 import "core:encoding/uuid"
 import "core:fmt"
 
-import "huginn:/core/app"
 import m "huginn:core/math"
+import "huginn:core/plugin"
 
 vec2 :: distinct m.vec2
 vec4 :: distinct m.vec4
@@ -40,9 +40,6 @@ Style :: struct {}
 
 Context :: struct {}
 
-get_plugin :: proc() -> (plugin: ^app.Plugin) {
-	plugin = new(app.Plugin)
-	plugin.id = "UI_Plugin"
-	plugin.build = proc(self: ^app.Plugin, app_ctx: ^app.App) {}
+get_plugin :: proc() -> (plugin: ^plugin.Plugin) {
 	return
 }

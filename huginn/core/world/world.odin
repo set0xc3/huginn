@@ -1,0 +1,3 @@
+package world
+
+World :: struct {}
