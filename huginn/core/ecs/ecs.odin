@@ -2,6 +2,7 @@ package ecs
 
 import sa "core:container/small_array"
 import "core:fmt"
+import "core:mem"
 
 MAX_ENTITIES: int : 1024
 
