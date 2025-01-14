@@ -15,6 +15,7 @@ PI :: 3.14159265358979323846264338327950288
 vec2 :: distinct [2]f32
 vec3 :: distinct [3]f32
 vec4 :: distinct [4]f32
+quat :: distinct [4]f32
 mat4 :: distinct [4][4]f32
 
 radians :: proc(degrees: f32) -> f32 {return degrees * TAU / 360.0}

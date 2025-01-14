@@ -1,8 +1,9 @@
 package ecs
 
-EntityId :: distinct u64
+Entity_Hanlde :: distinct uint
 
 Entity :: struct {
-	id:   EntityId,
-	mask: ComponentMask,
+	id:       Entity_Hanlde,
+	is_valid: bool,
+	variant:  Component_Variant,
 }

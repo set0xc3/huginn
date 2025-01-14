@@ -1,41 +1,42 @@
 package ecs
 
-Ecs :: struct {
-	entities:   map[EntityId]Entity,
-	components: map[Entity]map[string]Component,
-	entity_idx: EntityId,
+import "core:container/queue"
+import sa "core:container/small_array"
+import "core:fmt"
+
+MAX_ENTITIES: int : 1024
+
+Context :: struct {
+	entities: sa.Small_Array(MAX_ENTITIES, Entity),
 }
 
-init :: proc() -> (ecs: ^Ecs) {
-	ecs = new(Ecs)
-	ecs.entities = make(map[EntityId]Entity)
-	ecs.components = make(map[string]Component)
+init :: proc() -> (self: ^Context) {
+	self = new(Context)
 	return
 }
 
-deinit :: proc(ecs: ^Ecs) {
-	delete(ecs.entities)
-	delete(ecs.components)
-	free(ecs)
+deinit :: proc(self: ^Context) {
+	free(self)
 }
 
-registerComponent :: proc($T: typeid) {}
+push_entity :: proc(using self: ^Context) -> Entity_Hanlde {
+	idx := sa.len(entities)
+	entity := Entity {
+		id       = auto_cast idx,
+		is_valid = true,
+	}
 
-addComponent :: proc(id: EntityId, $T: typeid) {
+	err := sa.push(&entities, entity)
+	assert(err != false)
+
+	return auto_cast idx
 }
 
-getComponent :: proc(id: EntityId) {
+remove_entity :: proc(using self: ^Context, id: Entity_Hanlde) {
+	sa.set(&entities, auto_cast id, Entity{})
 }
 
-deleteComponent :: proc(id: EntityId) {
+is_valid :: proc(using self: ^Context, id: Entity_Hanlde) -> bool {
+	entity := sa.get_ptr(&entities, auto_cast id)
+	return entity.id == id && entity.is_valid
 }
-
-hasComponent :: proc(id: EntityId, $T: typeid) -> bool {
-	return false
-}
-
-createEntity :: proc(ecs: ^Ecs) -> EntityId {
-	return 0
-}
-
-deleteEntity :: proc(id: EntityId) {}

@@ -1,13 +1,16 @@
 package ecs
 
-MAX_COMPONENTS: uint : 128
+import m "huginn:core/math"
 
-ComponentMask :: bit_set[0 ..< MAX_COMPONENTS]
+vec3 :: distinct m.vec3
+quat :: distinct m.quat
 
-Component :: struct {}
+Component_Variant :: union {
+	Transform,
+}
 
-Transform :: struct {}
-
-Sprite :: struct {}
-
-Physics :: struct {}
+Transform :: struct {
+	position: vec3,
+	rotation: quat,
+	scale:    vec3,
+}
