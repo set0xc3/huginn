@@ -7,6 +7,8 @@ import "core:log"
 import "core:mem"
 import virt "core:mem/virtual"
 
+import "core:container/queue"
+
 main :: proc() {
 	arena: virt.Arena
 	err := virt.arena_init_static(&arena)
@@ -19,7 +21,11 @@ main :: proc() {
 
 	ent_a := ecs.push_entity(ecs_ctx)
 	if ecs.is_valid(ecs_ctx, ent_a) {
-		fmt.println("valided")
+		fmt.println("valid")
+
+		// Удобно инициализировать Transform
+		transform := ecs.push_component(ecs_ctx, ecs.Transform, ent_a)
 	}
+	fmt.println(arena.total_used)
 	virt.arena_temp_end(arena_temp)
 }

@@ -1,42 +1,54 @@
 package ecs
 
-import sa "core:container/small_array"
+import "core:container/queue"
 import "core:fmt"
 import "core:mem"
 
-MAX_ENTITIES: int : 1024
+DEFAULT_CAPACITY_ENTITIES: int : 1024
 
 Context :: struct {
-	entities: sa.Small_Array(MAX_ENTITIES, Entity),
+	entities: queue.Queue(Entity),
 }
 
-init :: proc() -> (self: ^Context) {
+init :: proc(cap: int = DEFAULT_CAPACITY_ENTITIES) -> (self: ^Context) {
 	self = new(Context)
+	queue.init(&self.entities, cap)
 	return
 }
 
+// TODO:
 deinit :: proc(self: ^Context) {
-	free(self)
 }
 
-push_entity :: proc(using self: ^Context) -> Entity_Hanlde {
-	idx := sa.len(entities)
+// TODO:
+register_component :: proc(using self: ^Context, $T: typeid) {
+
+}
+
+// TODO:
+push_component :: proc(using self: ^Context, $T: typeid, entity_id: Entity_Id) -> T {
+	return T{}
+}
+
+// TODO:
+remove_component :: proc(using self: ^Context, component: $T) {
+}
+
+push_entity :: proc(using self: ^Context) -> Entity_Id {
+	index := queue.len(entities)
 	entity := Entity {
-		id       = auto_cast idx,
+		id       = auto_cast index,
 		is_valid = true,
 	}
-
-	err := sa.push(&entities, entity)
-	assert(err != false)
-
-	return auto_cast idx
+	queue.push(&entities, entity)
+	return auto_cast index
 }
 
-remove_entity :: proc(using self: ^Context, id: Entity_Hanlde) {
-	sa.set(&entities, auto_cast id, Entity{})
+remove_entity :: proc(using self: ^Context, id: Entity_Id) {
+	queue.set(&entities, auto_cast id, Entity{})
 }
 
-is_valid :: proc(using self: ^Context, id: Entity_Hanlde) -> bool {
-	entity := sa.get_ptr(&entities, auto_cast id)
+is_valid :: proc(using self: ^Context, id: Entity_Id) -> bool {
+	entity := queue.get_ptr(&entities, auto_cast id)
 	return entity.id == id && entity.is_valid
 }
