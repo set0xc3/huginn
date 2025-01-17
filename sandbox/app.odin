@@ -20,11 +20,16 @@ main :: proc() {
 	defer ecs.deinit(ecs_ctx)
 
 	ent_a := ecs.push_entity(ecs_ctx)
+	ent_b := ecs.push_entity(ecs_ctx)
+	ent_c := ecs.push_entity(ecs_ctx)
 	if ecs.is_valid(ecs_ctx, ent_a) {
 		fmt.println("valid")
 
 		// Удобно инициализировать Transform
 		transform := ecs.push_component(ecs_ctx, ecs.Transform, ent_a)
+		sprite := ecs.push_component(ecs_ctx, ecs.Sprite, ent_a)
+		fmt.println(transform)
+		fmt.println(sprite)
 	}
 	fmt.println(arena.total_used)
 	virt.arena_temp_end(arena_temp)

@@ -1,6 +1,7 @@
 package ecs
 
 import "core:container/queue"
+import sa "core:container/small_array"
 import "core:fmt"
 import "core:mem"
 
@@ -26,8 +27,22 @@ register_component :: proc(using self: ^Context, $T: typeid) {
 }
 
 // TODO:
-push_component :: proc(using self: ^Context, $T: typeid, entity_id: Entity_Id) -> T {
-	return T{}
+push_component :: proc(using self: ^Context, $T: typeid, entity_id: Entity_Id) -> ^T {
+	entity := queue.get_ptr(&entities, entity_id)
+
+	sa.push(&entity.components, T{})
+	component := cast(^T)sa.get_ptr(&entity.components, sa.len(entity.components) - 1)
+	component.variant = component
+
+	#partial switch c in component.variant {
+	case ^Transform:
+		fmt.println(typeid_of(T))
+		c.scale = {1.0, 1.0, 1.0}
+	}
+
+	component.entity_id = entity_id
+
+	return cast(^T)component
 }
 
 // TODO:
